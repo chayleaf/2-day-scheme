@@ -291,7 +291,7 @@ void init() {
 
 void gc();
 
-inline SmallValue alloc_value_raw(Value val) {
+static inline SmallValue alloc_value_raw(Value val) {
   while (true)
     if (val_count == sizeof(values) / sizeof(values[0])) {
       val_count = min_val;
@@ -363,7 +363,7 @@ Cont *alloc_frame(Cont val) {
 REFUNREFFRAME(ref_frame, unref_frame, refcount);
 REFUNREFFRAME(ref_frame_heap, unref_frame_heap, heap_refcount);
 
-inline void ref_val(SmallValue val) {
+static inline void ref_val(SmallValue val) {
   if (val.n & ShortTag_Present)
     return;
   if (!val.p)
@@ -372,7 +372,7 @@ inline void ref_val(SmallValue val) {
   ++((Value *)val.p)->refcount;
 }
 
-inline void unref_val(SmallValue val) {
+static inline void unref_val(SmallValue val) {
   if (val.n & ShortTag_Present)
     return;
   if (!val.p)
@@ -489,7 +489,7 @@ void pop_frames() {
     break;                                                                     \
   }
 
-inline void mark_frame(Cont *cont);
+static inline void mark_frame(Cont *cont);
 void mark_value(SmallValue val) {
   if (!val.p)
     return;
@@ -506,7 +506,7 @@ void mark_value(SmallValue val) {
   VISIT_VAL(v, mark_value);
 }
 
-inline void mark_frame(Cont *cont) {
+static inline void mark_frame(Cont *cont) {
   while (cont && !(cont->kind & Cont_Marked)) {
     cont->kind |= Cont_Marked;
     mark_value(cont->args);
@@ -516,7 +516,7 @@ inline void mark_frame(Cont *cont) {
   }
 }
 
-inline void mark() {
+static inline void mark() {
   for (int i = min_val; i < sizeof(values) / sizeof(values[0]); ++i)
     values[i].mark = false;
   // visit all active closures and recursively mark all values as ued
@@ -562,7 +562,7 @@ void free_value(Value val) {
   }
 }
 
-inline void sweep() {
+static inline void sweep() {
   for (int i = min_val; i < sizeof(values) / sizeof(values[0]); ++i)
     if (!values[i].mark && values[i].tag != Tag_Sym) {
       free_value(values[i]);
@@ -602,7 +602,7 @@ static inline SmallValue alloc_value(Value val) {
   return ret;
 }
 
-inline Value read_value(SmallValue val) {
+static inline Value read_value(SmallValue val) {
   if (val.n & ShortTag_Present) {
     if (val.n & ShortTag_Int) {
       Value ret = {Tag_Int, .i = {READ_UNBOXED_INT(val.n), BOXED(NULL)}};
